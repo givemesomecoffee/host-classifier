@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.regex.Pattern
 
 const val ERROR_EMPTY_FIELD = "Поле не может быть пустым"
 const val ERROR_WHITESPACES = "В адресе не может быть пробелов"
@@ -31,11 +32,16 @@ class MainActivityViewModel : ViewModel() {
 
     private fun validateHostName(host: String): Boolean {
         var validated = false
+        val geo = host.split(".")
+        val zone = geo.last()
+        val pattern = Pattern.compile(IANA_TOP_LEVEL_DOMAINS)
         when {
             host.isEmpty() -> _validationState.postValue(ValidationState.error(ERROR_EMPTY_FIELD))
             host.contains(" ") ->
                 _validationState.postValue(ValidationState.error(ERROR_WHITESPACES))
             !Patterns.WEB_URL.matcher(host).matches() ->
+                _validationState.postValue(ValidationState.error(ERROR_WRONG_HOST))
+            !pattern.matcher(zone).matches() ->
                 _validationState.postValue(ValidationState.error(ERROR_WRONG_HOST))
             else -> validated = confirmValidation()
         }
